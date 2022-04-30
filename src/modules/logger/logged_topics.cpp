@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2019, 2021 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2019-2022 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -120,10 +120,10 @@ void LoggedTopics::add_default_topics()
 
 	// multi topics
 	add_optional_topic_multi("actuator_outputs", 100, 3);
-	add_topic_multi("airspeed_wind", 1000, 4);
-	add_topic_multi("control_allocator_status", 200, 2);
+	add_optional_topic_multi("airspeed_wind", 1000, 4);
+	add_optional_topic_multi("control_allocator_status", 200, 2);
 	add_optional_topic_multi("rate_ctrl_status", 200, 2);
-	add_topic_multi("sensor_hygrometer", 500, 4);
+	add_optional_topic_multi("sensor_hygrometer", 500, 4);
 	add_optional_topic_multi("rpm", 200);
 	add_optional_topic_multi("telemetry_status", 1000, 4);
 
@@ -132,7 +132,7 @@ void LoggedTopics::add_default_topics()
 	static constexpr uint8_t MAX_ESTIMATOR_INSTANCES = 1;
 #else
 	static constexpr uint8_t MAX_ESTIMATOR_INSTANCES = 6; // artificially limited until PlotJuggler fixed
-	add_topic("estimator_selector_status");
+	add_optional_topic("estimator_selector_status");
 	add_optional_topic_multi("estimator_attitude", 500, MAX_ESTIMATOR_INSTANCES);
 	add_optional_topic_multi("estimator_global_position", 1000, MAX_ESTIMATOR_INSTANCES);
 	add_optional_topic_multi("estimator_local_position", 500, MAX_ESTIMATOR_INSTANCES);
@@ -176,12 +176,38 @@ void LoggedTopics::add_default_topics()
 	add_optional_topic_multi("sensor_accel", 1000, 4);
 	add_optional_topic_multi("sensor_baro", 1000, 4);
 	add_topic_multi("sensor_gps", 1000, 2);
+	add_topic_multi("sensor_gnss_relative", 1000, 1);
 	add_optional_topic("pps_capture", 1000);
 	add_optional_topic_multi("sensor_gyro", 1000, 4);
 	add_optional_topic_multi("sensor_mag", 1000, 4);
 	add_topic_multi("vehicle_imu", 500, 4);
 	add_topic_multi("vehicle_imu_status", 1000, 4);
 	add_optional_topic_multi("vehicle_magnetometer", 500, 4);
+
+	// SYS_CTRL_ALLOC: additional dynamic control allocation logging when enabled
+	int32_t sys_ctrl_alloc = 0;
+	param_get(param_find("SYS_CTRL_ALLOC"), &sys_ctrl_alloc);
+
+	_dynamic_control_allocation = sys_ctrl_alloc >= 1;
+
+	if (_dynamic_control_allocation) {
+		add_topic("actuator_motors", 100);
+		add_topic("actuator_servos", 100);
+		add_topic("vehicle_angular_acceleration", 20);
+		add_topic_multi("vehicle_thrust_setpoint", 20, 1);
+		add_topic_multi("vehicle_torque_setpoint", 20, 2);
+	}
+
+	// SYS_HITL: default ground truth logging for simulation
+	int32_t sys_hitl = 0;
+	param_get(param_find("SYS_HITL"), &sys_hitl);
+
+	if (sys_hitl >= 1) {
+		add_topic("vehicle_angular_velocity_groundtruth", 10);
+		add_topic("vehicle_attitude_groundtruth", 10);
+		add_topic("vehicle_global_position_groundtruth", 100);
+		add_topic("vehicle_local_position_groundtruth", 20);
+	}
 
 #ifdef CONFIG_ARCH_BOARD_PX4_SITL
 	add_topic("actuator_controls_virtual_fw");
@@ -193,7 +219,7 @@ void LoggedTopics::add_default_topics()
 	add_topic("vehicle_angular_velocity", 10);
 	add_topic("vehicle_attitude_groundtruth", 10);
 	add_topic("vehicle_global_position_groundtruth", 100);
-	add_topic("vehicle_local_position_groundtruth", 100);
+	add_topic("vehicle_local_position_groundtruth", 20);
 
 	// EKF replay
 	add_topic("estimator_baro_bias");
@@ -214,26 +240,11 @@ void LoggedTopics::add_default_topics()
 	add_topic("wind");
 	add_topic("yaw_estimator_status");
 #endif /* CONFIG_ARCH_BOARD_PX4_SITL */
-
-
-	int32_t sys_ctrl_alloc = 0;
-	param_get(param_find("SYS_CTRL_ALLOC"), &sys_ctrl_alloc);
-
-	if (sys_ctrl_alloc >= 1) {
-		add_topic("actuator_motors", 100);
-		add_topic("actuator_servos", 100);
-		add_topic("vehicle_angular_acceleration", 20);
-		add_topic("vehicle_angular_acceleration_setpoint", 20);
-		add_topic_multi("vehicle_thrust_setpoint", 20, 2);
-		add_topic_multi("vehicle_torque_setpoint", 20, 2);
-	}
 }
 
 void LoggedTopics::add_high_rate_topics()
 {
 	// maximum rate to analyze fast maneuvers (e.g. for racing)
-	add_topic("actuator_controls_0");
-	add_topic("actuator_outputs");
 	add_topic("manual_control_setpoint");
 	add_topic("rate_ctrl_status", 20);
 	add_topic("sensor_combined");
@@ -242,6 +253,16 @@ void LoggedTopics::add_high_rate_topics()
 	add_topic("vehicle_attitude");
 	add_topic("vehicle_attitude_setpoint");
 	add_topic("vehicle_rates_setpoint");
+
+	if (_dynamic_control_allocation) {
+		add_topic("actuator_motors");
+		add_topic("vehicle_thrust_setpoint");
+		add_topic("vehicle_torque_setpoint");
+
+	} else {
+		add_topic("actuator_controls_0");
+		add_topic("actuator_outputs");
+	}
 }
 
 void LoggedTopics::add_debug_topics()
@@ -317,7 +338,6 @@ void LoggedTopics::add_system_identification_topics()
 	add_topic("actuator_controls_1");
 	add_topic("sensor_combined");
 	add_topic("vehicle_angular_acceleration");
-	add_topic("vehicle_angular_acceleration_setpoint");
 	add_topic("vehicle_torque_setpoint");
 }
 
@@ -440,7 +460,7 @@ bool LoggedTopics::add_topic(const char *name, uint16_t interval_ms, uint8_t ins
 				if (_subscriptions.sub[j].id == static_cast<ORB_ID>(topics[i]->o_id) &&
 				    _subscriptions.sub[j].instance == instance) {
 
-					PX4_DEBUG("logging topic %s(%" PRUu8 "), interval: %" PRUu16 ", already added, only setting interval",
+					PX4_DEBUG("logging topic %s(%" PRIu8 "), interval: %" PRIu16 ", already added, only setting interval",
 						  topics[i]->o_name, instance, interval_ms);
 
 					_subscriptions.sub[j].interval_ms = interval_ms;
@@ -452,7 +472,11 @@ bool LoggedTopics::add_topic(const char *name, uint16_t interval_ms, uint8_t ins
 
 			if (!already_added) {
 				success = add_topic(topics[i], interval_ms, instance, optional);
-				PX4_DEBUG("logging topic: %s(%" PRUu8 "), interval: %" PRUu16, topics[i]->o_name, instance, interval_ms);
+
+				if (success) {
+					PX4_DEBUG("logging topic: %s(%" PRIu8 "), interval: %" PRIu16, topics[i]->o_name, instance, interval_ms);
+				}
+
 				break;
 			}
 		}

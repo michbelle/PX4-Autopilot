@@ -405,8 +405,16 @@ else
 			battery_status start
 		fi
 
+		sensors start
 		commander start
 	fi
+
+	#
+	# Configure vehicle type specific parameters.
+	# Note: rc.vehicle_setup is the entry point for rc.interface,
+	#       rc.fw_apps, rc.mc_apps, rc.rover_apps, and rc.vtol_apps.
+	#
+	. ${R}etc/init.d/rc.vehicle_setup
 
 	# Pre-takeoff continuous magnetometer calibration
 	if param compare -s MBE_ENABLE 1
@@ -459,13 +467,6 @@ else
 	fi
 
 	#
-	# Configure vehicle type specific parameters.
-	# Note: rc.vehicle_setup is the entry point for rc.interface,
-	#       rc.fw_apps, rc.mc_apps, rc.rover_apps, and rc.vtol_apps.
-	#
-	. ${R}etc/init.d/rc.vehicle_setup
-
-	#
 	# Play the startup tune (if not disabled or there is an error)
 	#
 	param compare CBRK_BUZZER 782090
@@ -492,12 +493,6 @@ else
 		gimbal start
 	fi
 
-	# Check for flow sensor
-	if param compare -s SENS_EN_PX4FLOW 1
-	then
-		px4flow start -X
-	fi
-
 	# Blacksheep telemetry
 	if param compare -s TEL_BST_EN 1
 	then
@@ -512,6 +507,12 @@ else
 	if param compare -s IMU_GYRO_CAL_EN 1
 	then
 		gyro_calibration start
+	fi
+
+	# Check for px4flow sensor
+	if param compare -s SENS_EN_PX4FLOW 1
+	then
+		px4flow start -X &
 	fi
 
 	#
