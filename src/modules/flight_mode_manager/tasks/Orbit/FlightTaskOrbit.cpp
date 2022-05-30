@@ -37,7 +37,9 @@
 
 #include "FlightTaskOrbit.hpp"
 
+#include <lib/systemlib/mavlink_log.h>
 #include <mathlib/mathlib.h>
+#include <px4_platform_common/events.h>
 #include <lib/geo/geo.h>
 
 using namespace matrix;
@@ -69,10 +71,18 @@ bool FlightTaskOrbit::applyCommandParameters(const vehicle_command_s &command)
 	}
 
 	float new_velocity = signFromBool(new_is_clockwise) * new_absolute_velocity;
-	_started_clockwise = new_is_clockwise;
-	_sanitizeParams(new_radius, new_velocity);
-	_orbit_radius = new_radius;
-	_orbit_velocity = new_velocity;
+
+	if (math::isInRange(new_radius, _radius_min, _radius_max)) {
+		_started_clockwise = new_is_clockwise;
+		_sanitizeParams(new_radius, new_velocity);
+		_orbit_radius = new_radius;
+		_orbit_velocity = new_velocity;
+
+	} else {
+		mavlink_log_critical(&_mavlink_log_pub, "Orbit radius limit exceeded\t");
+		events::send(events::ID("orbit_radius_exceeded"), events::Log::Alert, "Orbit radius limit exceeded");
+		ret = false;
+	}
 
 	// commanded heading behaviour
 	if (PX4_ISFINITE(command.param3)) {
@@ -148,7 +158,7 @@ void FlightTaskOrbit::_sanitizeParams(float &radius, float &velocity) const
 	}
 }
 
-bool FlightTaskOrbit::activate(const vehicle_local_position_setpoint_s &last_setpoint)
+bool FlightTaskOrbit::activate(const trajectory_setpoint_s &last_setpoint)
 {
 	bool ret = FlightTaskManualAltitude::activate(last_setpoint);
 	_orbit_radius = _radius_min;
@@ -166,8 +176,8 @@ bool FlightTaskOrbit::activate(const vehicle_local_position_setpoint_s &last_set
 	      && PX4_ISFINITE(_velocity(1))
 	      && PX4_ISFINITE(_velocity(2));
 
-	Vector3f vel_prev{last_setpoint.vx, last_setpoint.vy, last_setpoint.vz};
-	Vector3f pos_prev{last_setpoint.x, last_setpoint.y, last_setpoint.z};
+	Vector3f pos_prev{last_setpoint.position};
+	Vector3f vel_prev{last_setpoint.velocity};
 	Vector3f accel_prev{last_setpoint.acceleration};
 
 	for (int i = 0; i < 3; i++) {

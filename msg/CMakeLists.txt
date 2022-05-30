@@ -52,6 +52,7 @@ set(msg_files
 	airspeed_wind.msg
 	autotune_attitude_control_status.msg
 	battery_status.msg
+	button_event.msg
 	camera_capture.msg
 	camera_status.msg
 	camera_trigger.msg
@@ -76,6 +77,9 @@ set(msg_files
 	estimator_states.msg
 	estimator_status.msg
 	estimator_status_flags.msg
+	estimator_aid_source_1d.msg
+	estimator_aid_source_2d.msg
+	estimator_aid_source_3d.msg
 	event.msg
 	follow_target.msg
 	failure_detector_status.msg
@@ -136,7 +140,6 @@ set(msg_files
 	rc_parameter_map.msg
 	rpm.msg
 	rtl_time_estimate.msg
-	safety.msg
 	satellite_info.msg
 	sensor_accel.msg
 	sensor_accel_fifo.msg
@@ -144,6 +147,7 @@ set(msg_files
 	sensor_combined.msg
 	sensor_correction.msg
 	sensor_gps.msg
+	sensor_gnss_relative.msg
 	sensor_gyro.msg
 	sensor_gyro_fft.msg
 	sensor_gyro_fifo.msg
@@ -152,6 +156,7 @@ set(msg_files
 	sensor_preflight_mag.msg
 	sensor_selection.msg
 	sensors_status_imu.msg
+	sensors_status.msg
 	system_power.msg
 	takeoff_status.msg
 	task_stack_info.msg
@@ -161,6 +166,7 @@ set(msg_files
 	timesync.msg
 	timesync_status.msg
 	trajectory_bezier.msg
+	trajectory_setpoint.msg
 	trajectory_waypoint.msg
 	transponder_report.msg
 	tune_control.msg
@@ -168,6 +174,8 @@ set(msg_files
 	uavcan_parameter_value.msg
 	ulog_stream.msg
 	ulog_stream_ack.msg
+	uwb_grid.msg
+	uwb_distance.msg
 	vehicle_acceleration.msg
 	vehicle_air_data.msg
 	vehicle_angular_acceleration.msg
