@@ -1,0 +1,2926 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language italian
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement H
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine natbib
+\cite_engine_type authoryear
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style french
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Simulazione drone in Gazebo e ________________
+\end_layout
+
+\begin_layout Standard
+(Bruttissima copia e manca molto)
+\end_layout
+
+\begin_layout Part*
+Introduzione
+\end_layout
+
+\begin_layout Standard
+In questa tesi andremo a realizzare un sistema di simulazione di una coppia
+ di droni interconnessi con un cavo.
+ Tale simulazione ci permette di verificare il comportamento dei sistemi
+ di controllo della px4 nel caso in cui i cavi sono fissi in lunghezza tra
+ i droni e alla groun station.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Quello che in questa tesi andremo a realizzare è una piattaforma di 
+\begin_inset Quotes fld
+\end_inset
+
+test
+\begin_inset Quotes frd
+\end_inset
+
+ per il drone della dronus che, utilizzando il software della px4, interagisce
+ con il loro sistema di agganciamento e ricarica, Nest.
+\end_layout
+
+\begin_layout Plain Layout
+In particolar modo, il drone deve interagire in modo più o meno realistico
+ con l'ambiente e con i sensori in modo da poter analizzare il comportamento
+ e adattare il firmware per il funzionamento con questo sistema.
+\end_layout
+
+\begin_layout Plain Layout
+Inoltre permette di avere un sitema di simulazione che non comporta danneggiamen
+ti in caso di erroneo setup ed impostazione del drone.
+\end_layout
+
+\begin_layout Plain Layout
+Si potrà anche inserire e testare metodi di avvicinamento ed analizzare
+ il loro funzionamento.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+L'ambiente di simulazione che andremo ad utilizzare sarà gazebo data la
+ sua diffusione anche per il sistema a lui legato, ROS.
+ Il tutto in ambiente docker che ci permetterà la distribuzione della simulazion
+e su diverse macchine e permette di intercambiare facilmente tra le v4ersioni
+ di gazebo e ros disponibili.
+\end_layout
+
+\begin_layout Part*
+Creazione simulazione
+\end_layout
+
+\begin_layout Section
+Selezione ambiente
+\end_layout
+
+\begin_layout Standard
+Per l'eventuale dispiegamento del software su diverse macchine è stato reso
+ oppurtuno scegliere, come sistema si sviluppo, il docker.
+ 
+\end_layout
+
+\begin_layout Standard
+Docker è un sistema di gestione di immagini che contengono tutto il software
+ per l'applicazione che si vuole sviluppare.
+ Questa immagine ha la possibilità di essere facilmente distribuita su altri
+ OS, in modo molto più sempliche che la creazioni di sistemi virtualizzati,
+ dato che richiede meno risorse.
+\end_layout
+
+\begin_layout Section
+Docker
+\end_layout
+
+\begin_layout Standard
+Per la simulazione che comprende anche l'interazione con il sistema informatico
+ inserito nel Nest, utilizzeremo l'immagine docker che contiene tutta il
+ codice e strumentazione per la simulazione.
+ Tale immagine sarà px4io/px4-dev-ros2-foxy.
+\end_layout
+
+\begin_layout Standard
+Questa immagine contiene in modo approfondito:
+\end_layout
+
+\begin_layout Itemize
+gazebo 11, che sarà il fulcro della simulazione permettendoci di vedere
+ l'ambiente 3D e ci permetterà di analizzare le collisioni tra il drone
+ ed il nest;
+\end_layout
+
+\begin_layout Itemize
+ROS Noetic che ci permette di usare ed analizzare in modo semplice e completo
+ altre funzionalità;
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+vedere quale versione installata
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+ROS2 Foxy che permetterà in fututo di sviluppare il sistema per quel tipo
+ di framework migliorato.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+ROS 2 realease nuova
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Ora, in ambito di sviluppo, abbiamo anche la necessità di analizzare visivamente
+ il comportamento del drone e del Nest.
+\end_layout
+
+\begin_layout Standard
+A tale scopo saranno utilizzate le Graphics User Interface(GUI) fornite
+ dai vari programmi utilizzati.
+ Per far ciò abbiamo bisogno di settare alcuni parametri ed installare alcune
+ cose nel container docker.
+\end_layout
+
+\begin_layout Standard
+L'errore che si presenta immediatamente è al mancanza dei driver OpenGl
+ (dove OpenGl è un API (application programming interface) di grafica) con
+ il seguente tipo di errore libGL error: failed to load driver: swrast,
+ tale errore può essere riparato installando i driver nel container.
+ Nei sistemi dotati di scheda Nvidia, l'installazione può essere fatta installan
+do gli stessi driver Nvidia della macchina host.
+ Tale metodo installa automaticamente i driver opengl necessari ed aggiunge
+ la possibilità di comunicare direttamente con la GPU dell'host.
+ L'installazione può essere effettuata in due modi: utilizzando il sistema
+ apt (Advanced Package Tool, un sistema di gestione dei pacchetti in uso
+ da debian), utilizzando il comando 
+\begin_inset Quotes fld
+\end_inset
+
+apt install nvidia-driver-<versionehost>
+\begin_inset Quotes frd
+\end_inset
+
+ oppure installando utilizzando lo script di Nvidia fornito nel loro sito,
+ con il seguente comando 
+\begin_inset Quotes fld
+\end_inset
+
+./NVIDIA-DRIVER.run -a -N --ui=none --no-kernel-module
+\begin_inset Quotes frd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Per fare il completo passthrough della scheda Nvidia può essere necessario
+ installare 
+\end_layout
+
+\begin_layout Standard
+Scaricare i driver con apt risulta più lento che con nvidia driver percè
+ i primi scaricano più dipendenze che il secondo ma essendo che richiedono
+ un solo comando esso risulta più semplice rispetto al secondo.
+\end_layout
+
+\begin_layout Standard
+Per macchina ubuntu, per poter pubblicare la gui su host abbiamo usato il
+ seguente comando: 
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+xhost +
+\end_layout
+
+\end_inset
+
+, dove indica che l'X server dell'host deve permettere la connessione dal
+ container.
+\end_layout
+
+\begin_layout Standard
+Poi si lancia il docker con il seguente codice:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+docker run -it --privileged 
+\backslash
+ 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	--env=QT_X11_NO_MITSHM=1 
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+	-v ~/src/PX4-Autopilot:/src/PX4-Autopilot:rw 
+\backslash
+    	
+\end_layout
+
+\begin_layout Plain Layout
+
+	-v /tmp/.X11-unix:/tmp/.X11-unix:ro 
+\backslash
+     	
+\end_layout
+
+\begin_layout Plain Layout
+
+	-e DISPLAY=$DISPLAY 
+\backslash
+ 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	--network host 
+\backslash
+     	
+\end_layout
+
+\begin_layout Plain Layout
+
+	--name=Dronus_simul px4io/px4-dev-ros2-foxy bash
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+dove, i parametri sono i seguenti
+\end_layout
+
+\begin_layout Itemize
+-it : The -it instructs Docker to allocate a pseudo-TTY connected to the
+ container’s stdin; creating an interactive bash shell in the container
+\end_layout
+
+\begin_layout Itemize
+–privileged : is essential for DRI support.
+\end_layout
+
+\begin_layout Itemize
+-v path:xx : Bind mount a volume : con i relativi permessi, X11 enables
+ the docker container to use the X server of your host;
+\end_layout
+
+\begin_layout Itemize
+-e / –env variabile : imposta le variabili ambientali;
+\end_layout
+
+\begin_layout Itemize
+–network host : permette di connettere il container con la rete, host sta
+ per: container’s network stack is not isolated from the Docker host (the
+ container shares the host’s networking namespace), and the container does
+ not get its own IP-address allocated, utilizzato principalmente per comodità
+ e così non serve controllare il settaggio corretto delle porte che il container
+ può comunicare con l'host; (-p fa il passaggio di alcune porte con l'esterno
+ processo che risulta talvolta scomodo)
+\end_layout
+
+\begin_layout Itemize
+–name = nome arbitrario dato al container e
+\end_layout
+
+\begin_layout Itemize
+image è l'immagine utilizzata dal docker che nel nostro caso è px4io/px4-dev-ros
+2-foxy.
+\end_layout
+
+\begin_layout Standard
+Questo sistema permette di lanciare programmi che presentano anche un interfacci
+a grafica.
+\end_layout
+
+\begin_layout Standard
+In alcuni casi essa non funziona è può essere necessario installare dei
+ pacchetti per poter vederle, in caso di schede grafiche nvidia basta o
+ installare i driver uguali alla macchina host con i file da loro indicati
+ ed eseguendo il seguente comando ./Nvidia-release –no-kernel-module altrimenti
+ basta fare apt install nvidia-driver-xxx
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Graphics Driver Issues
+\end_layout
+
+\begin_layout Plain Layout
+It's possible that running Gazebo will result in a similar error message
+ like the following:
+\end_layout
+
+\begin_layout Plain Layout
+libGL error: failed to load driver: swrast
+\end_layout
+
+\begin_layout Plain Layout
+In that case the native graphics driver for your host system must be installed.
+ Download the right driver and install it inside the container.
+ For Nvidia drivers the following command should be used (otherwise the
+ installer will see the loaded modules from the host and refuse to proceed):
+\end_layout
+
+\begin_layout Plain Layout
+./NVIDIA-DRIVER.run -a -N --ui=none --no-kernel-module 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+PX4 
+\end_layout
+
+\begin_layout Standard
+Px4 è un software open source per il controllo di volo di droni e sistemi
+ senza pilota.
+ Nella scheda andremo ad installare il firmware.
+\end_layout
+
+\begin_layout Standard
+Questa è la sua tipica struttura:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/high_level_px4.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+high level px4
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Dove a destra sono indicati gli hardware mentre a sinistra la parte sowftware
+ (allineato orrizontalmente).
+ La ground station tipicamente usa tali software oppure anche sistemi utili
+ alla robotica come MAVSDK e ROS.
+\end_layout
+
+\begin_layout Standard
+puo essere accoppiato anche con un companion computer come riportato nella
+ figura successiva.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/px4_companionpcd.svg
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+px4 + companion computer
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In cui le due board sono connesse attraverso un fast serial o ip link usando
+ il protocollo mavlink(https://mavlink.io/en/).
+\end_layout
+
+\begin_layout Standard
+Tutti gli airframes condividono un singolo codebase, basato per essere reactive
+ (http://www.reactivemanifesto.org/) cioè:
+\end_layout
+
+\begin_layout Itemize
+tutte le funzioni sono divise in componenti scambiabili e riusabili;
+\end_layout
+
+\begin_layout Itemize
+i messaggi sono asincroni
+\end_layout
+
+\begin_layout Itemize
+può sostenere con diversi workload.
+\end_layout
+
+\begin_layout Standard
+L'architettura del px4 è costituita da due layer: il 
+\begin_inset Quotes eld
+\end_inset
+
+flight stack
+\begin_inset Quotes erd
+\end_inset
+
+ e il 
+\begin_inset Quotes eld
+\end_inset
+
+middleware
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Il primo si occupa della 
+\begin_inset Quotes eld
+\end_inset
+
+stima
+\begin_inset Quotes erd
+\end_inset
+
+ ed il sistema di controllo del drone, mentre il secondo è un layer generalizzat
+o per la robotica.
+\end_layout
+
+\begin_layout Subsection
+High-Level Software Architecture
+\end_layout
+
+\begin_layout Standard
+Il diagramma mostra come è costruito il px4.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/Px4_high_level_software_architecture.png
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+High-Level Software Architecture
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+La parte sopra descrive il 
+\begin_inset Quotes eld
+\end_inset
+
+middleware
+\begin_inset Quotes erd
+\end_inset
+
+ mentre la parte sotto 
+\begin_inset Quotes eld
+\end_inset
+
+flight stack
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+The source code is split into self-contained modules/programs (shown in
+ monospace in the diagram).
+ Usually a building block corresponds to exactly one module.
+\end_layout
+
+\begin_layout Standard
+Modules communicate with each other through a publish-subscribe message
+ bus named uORB.
+ The use of the publish-subscribe scheme means that:
+\end_layout
+
+\begin_layout Itemize
+The system is reactive — it is asynchronous and will update instantly when
+ new data is available
+\end_layout
+
+\begin_layout Itemize
+All operations and communication are fully parallelized
+\end_layout
+
+\begin_layout Itemize
+A system component can consume data from anywhere in a thread-safe fashion
+\end_layout
+
+\begin_layout Subsubsection
+Flight Stack
+\end_layout
+
+\begin_layout Standard
+The flight stack is a collection of guidance, navigation and control algorithms
+ for autonomous drones.
+ It includes controllers for fixed wing, multirotor and VTOL airframes as
+ well as estimators for attitude and position.
+ The following diagram shows an overview of the building blocks of the flight
+ stack.
+ It contains the full pipeline from sensors, RC input and autonomous flight
+ control (Navigator), down to the motor or servo control (Actuators).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/Flight_stack.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Flight stack
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+An estimator takes one or more sensor inputs, combines them, and computes
+ a vehicle state.
+\end_layout
+
+\begin_layout Itemize
+A controller is a component that takes a setpoint and a measurement or estimated
+ state (process variable) as input.
+ Its goal is to adjust the value of the process variable such that it matches
+ the setpoint.
+ The output is a correction to eventually reach that setpoint.
+\end_layout
+
+\begin_layout Itemize
+A mixer takes force commands and translates them into individual motor commands,
+ while ensuring that some limits are not exceeded.
+\end_layout
+
+\begin_layout Subsubsection
+Middleware
+\end_layout
+
+\begin_layout Standard
+The middleware consists primarily of device drivers for embedded sensors,
+ communication with the external world (companion computer, GCS, etc.) and
+ the uORB publish-subscribe message bus.
+\end_layout
+
+\begin_layout Standard
+In addition, the middleware includes a simulation layer that allows PX4
+ flight code to run on a desktop operating system and control a computer
+ modeled vehicle in a simulated "world".
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Update rates
+\end_layout
+
+\begin_layout Standard
+Since the modules wait for message updates, typically the drivers define
+ how fast a module updates.
+ Most of the IMU drivers sample the data at 1kHz, integrate it and publish
+ with 250Hz.
+ Other parts of the system, such as the navigator, don't need such a high
+ update rate, and thus run considerably slower.
+\end_layout
+
+\begin_layout Standard
+The message update rates can be inspected in real-time on the system by
+ running uorb top.
+\end_layout
+
+\begin_layout Subsection
+Runtime Environment
+\end_layout
+
+\begin_layout Standard
+PX4 runs on various operating systems that provide a POSIX-API (such as
+ Linux, macOS, NuttX or QuRT).
+ It should also have some form of real-time scheduling (e.g.
+ FIFO).
+\end_layout
+
+\begin_layout Standard
+The inter-module communication (using uORB) is based on shared memory.
+ The whole PX4 middleware runs in a single address space, i.e.
+ memory is shared between all modules.
+\end_layout
+
+\begin_layout Standard
+The system is designed such that with minimal effort it would be possible
+ to run each module in separate address space (parts that would need to
+ be changed include uORB, parameter interface, dataman and perf).
+\end_layout
+
+\begin_layout Standard
+There are 2 different ways that a module can be executed:
+\end_layout
+
+\begin_layout Itemize
+Tasks: The module runs in its own task with its own stack and process priority.
+\end_layout
+
+\begin_layout Itemize
+Work queue tasks: The module runs on a shared work queue, sharing the same
+ stack and work queue thread priority as other modules on the queue.
+\end_layout
+
+\begin_layout Enumerate
+All the tasks must behave co-operatively as they cannot interrupt each other.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Multiple work queue tasks can run on a queue, and there can be multiple
+ queues.
+ 
+\end_layout
+
+\begin_layout Enumerate
+A work queue task is scheduled by specifying a fixed time in the future,
+ or via uORB topic update callback.
+\end_layout
+
+\begin_layout Standard
+The advantage of running modules on a work queue is that it uses less RAM,
+ and potentially results in fewer task switches.
+ The disadvantages are that work queue tasks are not allowed to sleep or
+ poll on a message, or do blocking IO (such as reading from a file).
+ Long-running tasks (doing heavy computation) should potentially also run
+ in a separate task or at least a separate work queue.
+\end_layout
+
+\begin_layout Standard
+Tasks running on a work queue do not show up in uorb top (only the work
+ queues themselves can be seen - e.g.
+ as wq:lp_default).
+ Use work_queue status to display all active work queue items.
+\end_layout
+
+\begin_layout Subsection
+Background Tasks
+\end_layout
+
+\begin_layout Standard
+px4_task_spawn_cmd() is used to launch new tasks (NuttX) or threads (POSIX
+ - Linux/macOS) that run independently from the calling (parent) task:
+\end_layout
+
+\begin_layout Standard
+independent_task = px4_task_spawn_cmd( "commander", // Process name SCHED_DEFAUL
+T, // Scheduling type (RR or FIFO) SCHED_PRIORITY_DEFAULT + 40, // Scheduling
+ priority 3600, // Stack size of the new task or thread commander_thread_main,
+ // Task (or thread) main function (char * const *)&argv[0] // Void pointer
+ to pass to the new task // (here the commandline arguments).
+ );
+\end_layout
+
+\begin_layout Subsection
+OS-Specific Information
+\end_layout
+
+\begin_layout Standard
+Nuttx 
+\end_layout
+
+\begin_layout Standard
+NuttX is the primary RTOS for running PX4 on a flight-control board.
+ It is open source (BSD license), light-weight, efficient and very stable.
+\end_layout
+
+\begin_layout Standard
+Modules are executed as tasks: they have their own file descriptor lists,
+ but they share a single address space.
+ A task can still start one or more threads that share the file descriptor
+ list.
+\end_layout
+
+\begin_layout Standard
+Each task/thread has a fixed-size stack, and there is a periodic task which
+ checks that all stacks have enough free space left (based on stack coloring).
+ 
+\end_layout
+
+\begin_layout Standard
+Linux/macOS
+\end_layout
+
+\begin_layout Standard
+On Linux or macOS, PX4 runs in a single process, and the modules run in
+ their own threads (there is no distinction between tasks and threads as
+ on NuttX).
+\end_layout
+
+\begin_layout Section
+Controlli
+\end_layout
+
+\begin_layout Standard
+In questa parte discuteremo brevemente dei principali controlli usati in
+ px4
+\end_layout
+
+\begin_layout Subsection
+Multicopter Control Architecture
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/mc_control_arch(multicopter_control_archicteture).jpg
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Multicopter Control Architecture
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+This is a standard cascaded control architecture.
+\end_layout
+
+\begin_layout Itemize
+The controllers are a mix of P and PID controllers.
+\end_layout
+
+\begin_layout Itemize
+Estimates come from EKF2.
+\end_layout
+
+\begin_layout Itemize
+Depending on the mode, the outer (position) loop is bypassed (shown as a
+ multiplexer after the outer loop).
+ The position loop is only used when holding position or when the requested
+ velocity in an axis is null.
+\end_layout
+
+\begin_layout Subsection
+Multicopter Angular Rate Controller
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/mc_angular_rate_diagram.jpg
+	scale 50
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Multicopter Angular Rate Controller
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+K-PID controller.
+ See Rate Controller for more information.
+\end_layout
+
+\begin_layout Itemize
+The integral authority is limited to prevent wind up.
+\end_layout
+
+\begin_layout Itemize
+The outputs are limited (in the mixer), usually at -1 and 1.
+\end_layout
+
+\begin_layout Itemize
+A Low Pass Filter (LPF) is used on the derivative path to reduce noise (the
+ gyro driver provides a filtered derivative to the controller).
+\end_layout
+
+\begin_layout Subsection
+Multicopter Attitude Controller
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/mc_angle_diagram(attitude).jpg
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Multicopter Attitude Controller
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+The attitude controller makes use of quaternions.
+\end_layout
+
+\begin_layout Itemize
+The controller is implemented from this article
+\end_layout
+
+\begin_layout Itemize
+When tuning this controller, the only parameter of concern is the P gain.
+ The rate command is saturated.
+\end_layout
+
+\begin_layout Subsection
+Multicopter Velocity Controller
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/mc_velocity_diagram.jpg
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Multicopter Velocity Controller
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+PID controller to stabilise velocity.
+ Commands an acceleration.
+\end_layout
+
+\begin_layout Itemize
+The integrator includes an anti-reset windup (ARW) using a clamping method.
+\end_layout
+
+\begin_layout Itemize
+The commanded acceleration is saturated.
+\end_layout
+
+\begin_layout Subsection
+Multicopter Position Controller
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/mc_position.jpg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Multicopter Position Controller
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Simple P controller that commands a velocity.
+\end_layout
+
+\begin_layout Itemize
+The commanded velocity is saturated to keep the velocity in certain limits.
+\end_layout
+
+\begin_layout Subsection
+Combined Position and Velocity Controller Diagram
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/px4_mc_position_controller(position_plus_velocity).png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Combined Position and Velocity Controller Diagram
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Dato un occhiata ai modelli di controllo usato dal px4 possiamo descrivere
+ il funzionemanto.
+ passiamo alla definizione dei flight modes e relativi flight tasks:
+\end_layout
+
+\begin_layout Section
+Flight modes and flight tasks
+\end_layout
+
+\begin_layout Standard
+In questa fase descriveremo come il drone funziona in base hai modes.
+\end_layout
+
+\begin_layout Subsection
+flight modes
+\end_layout
+
+\begin_layout Standard
+Indicano come l'autopilot risponde agli input e come controlla il veicolo.
+\end_layout
+
+\begin_layout Standard
+Si dividono in 3 gruppi: manual, assisted e auto, che si basano sul tipo
+ di controllo è fornito dal autopilot durante il volo.
+\end_layout
+
+\begin_layout Standard
+In dettaglio:
+\end_layout
+
+\begin_layout Itemize
+manual (manual, stabilized e acro) sono i tipiu di controllo dove l'utente
+ ha controllo diretto sul drone con il telecomando, la risposta dipende
+ dal tipo di controllo;
+\end_layout
+
+\begin_layout Itemize
+assisted (ALTCTL, POSCTL) sono sia controlli dipendenti dall'utente che
+ automatici;
+\end_layout
+
+\begin_layout Itemize
+auto (AUTO_LOITER, AUTO_RTL, AUTO_MISSION) sono controlli con poca interazione
+ dell'utente.
+\end_layout
+
+\begin_layout Standard
+Da questi metodi di autopilot si possono crease sotto modalità che definiscono
+ un particolare funzionamento dell'autopilot.
+ Queste sono le: Flight task
+\end_layout
+
+\begin_layout Address
+ 
+\end_layout
+
+\begin_layout Subsubsection
+flight tasks
+\end_layout
+
+\begin_layout Standard
+In particolare è una classe derivata dalla classe principale di volo.
+ Its goal is to generate setpoints for the controller from arbitrary input
+ data, where each task implements the desired vehicle behavior for a specific
+ mode.
+ 
+\end_layout
+
+\begin_layout Section
+Mixing and Actuators
+\end_layout
+
+\begin_layout Standard
+The PX4 architecture ensures that the airframe layout does not require special
+ case handling in the core controllers.
+ Mixing means to take force commands (e.g.
+ turn right) and translate them to actuator commands which control motors
+ or servos.
+ Separating the mixer logic from the actual attitude controller greatly
+ improves reusability.
+ 
+\end_layout
+
+\begin_layout Subsection
+Control Pipeline
+\end_layout
+
+\begin_layout Standard
+A particular controller sends a particular normalized force or torque demand
+ (scaled from -1..+1) to the mixer, which then sets individual actuators according
+ly.
+ The output driver (e.g.
+ UART, UAVCAN or PWM) then scales it to the actuators native units, e.g.
+ a PWM value of 1300.
+\end_layout
+
+\begin_layout Subsection
+Control Groups
+\end_layout
+
+\begin_layout Standard
+PX4 uses control groups (inputs) and output groups.
+ Conceptually they are very simple: A control group is e.g.
+ attitude, for the core flight controls, or gimbal for payload.
+ An output group is one physical bus, e.g.
+ the first 8 PWM outputs for servos.
+ Each of these groups has 8 normalized (-1..+1) command ports, which can be
+ mapped and scaled through the mixer.
+ A mixer defines how each of these 8 signals of the controls are connected
+ to the 8 outputs.
+\end_layout
+
+\begin_layout Standard
+For a simple plane control 0 (roll) is connected straight to output 0 (aileron).
+ For a multicopter things are a bit different: control 0 (roll) is connected
+ to all four motors and combined with throttle
+\end_layout
+
+\begin_layout Subsection
+Output Groups/Mapping
+\end_layout
+
+\begin_layout Standard
+An output group is one physical bus (e.g.
+ FMU PWM outputs, IO PWM outputs, UAVCAN etc.) that has N (usually 8) normalized
+ (-1..+1) command ports that can be mapped and scaled through the mixer.
+\end_layout
+
+\begin_layout Standard
+The mixer file does not explicitly define the actual output group (physical
+ bus) where the outputs are applied.
+ Instead, the purpose of the mixer (e.g.
+ to control MAIN or AUX outputs) is inferred from the mixer filename, and
+ mapped to the appropriate physical bus in the system startup scripts (and
+ in particular in rc.interface (opens new window)).
+\end_layout
+
+\begin_layout Section
+Multicopter Geometry Files
+\end_layout
+
+\begin_layout Standard
+Geometry files are used by PX4 to generate mixer definitions that map the
+ outputs of PX4 rate controllers to specific motors.
+ The files describe the positions, direction of thrust, rotation direction,
+ thrust and drag coefficients of each of the rotors.
+\end_layout
+
+\begin_layout Standard
+Geometry files are plain-text files that are divided into sections deliniated
+ by the headers: [info], [rotor_default], and [[rotor]]
+\end_layout
+
+\begin_layout Subsection
+[info]
+\end_layout
+
+\begin_layout Standard
+The [info] section identifies the files for readers and for PX4.
+\end_layout
+
+\begin_layout Itemize
+key: An arbitrary identifier to allow the file to be distinguished from
+ other geometry files.
+ By convention the key is usually the number of rotors followed by one or
+ two letters (these letters may hint at the configuration).
+ For example: "4hb" 
+\end_layout
+
+\begin_layout Itemize
+description: A human readable description of the configuration described
+ by the geometry file.
+ For example: "Generic Quadcopter in H configuration"
+\end_layout
+
+\begin_layout Subsection
+[rotor_default]
+\end_layout
+
+\begin_layout Standard
+The [rotor_default] section specifies default values will be applied to
+ a rotor if the corresponding key is not provided in the [[rotor]] definition.
+ 
+\end_layout
+
+\begin_layout Subsection
+[[rotor]]
+\end_layout
+
+\begin_layout Standard
+Each [rotor] section describes the geometry values for a rotor
+\end_layout
+
+\begin_layout Itemize
+name: Human-readable name for the rotor.
+ For example: "front_right_top" 
+\end_layout
+
+\begin_layout Itemize
+position: A vector describing the location of the rotor relative to the
+ vehicle centre of gravity in the body frame (Forward-Right-Down).
+ This can be any units (e.g.
+ metres, fathoms, whatever) because the mixer is normalised (only only the
+ ratio between the distances is really important).
+ axis: A vector in the in the body frame (Forward-Right-Down) describing
+ the direction of the thrust produced by the rotor.
+ For example [1.0, 0.0, -1.0] means that the rotor produces upward and forward
+ thrust equally (i.e.: angle of 45 degrees).
+\end_layout
+
+\begin_layout Itemize
+direction: specifies the direction of rotation of a rotor, CW (clockwise)
+ or CCW (counter clockwise) 
+\end_layout
+
+\begin_layout Itemize
+Ct: Non-dimensional thrust coefficient.
+ For example, a rotor with a Ct of 2.0 produces 2 times the thrust of a rotor
+ with a Ct of 1.0 
+\end_layout
+
+\begin_layout Itemize
+Cm: Non-dimensional drag torque coefficient.
+ This relates to the axial torque produced by a spinning propeller.
+ This needs to be set relative to Ct if some torque can be produced by drag
+ and thrust together.
+ If set to 0, the mixer will assume that the rotor does not produce any
+ axial torque.
+\end_layout
+
+\begin_layout Standard
+https://docs.px4.io/master/en/concept/geometry_files.html
+\end_layout
+
+\begin_layout Section
+System Startup
+\end_layout
+
+\begin_layout Standard
+The PX4 startup is controlled by shell scripts.
+ On NuttX they reside in the ROMFS/px4fmu_common/init.d (opens new window)
+ folder - some of these are also used on Posix (Linux/MacOS).
+ The scripts that are only used on Posix are located in ROMFS/px4fmu_common/init.
+d-posix
+\end_layout
+
+\begin_layout Standard
+(opens new window).
+\end_layout
+
+\begin_layout Standard
+All files starting with a number and underscore (e.g.
+ 10000_airplane) are predefined airframe configurations.
+ They are exported at build-time into an airframes.xml file which is parsed
+ by QGroundControl
+\end_layout
+
+\begin_layout Standard
+(opens new window) for the airframe selection UI.
+ Adding a new configuration is covered here.
+\end_layout
+
+\begin_layout Standard
+The remaining files are part of the general startup logic.
+ The first executed file is the init.d/rcS (opens new window) script (or
+ init.d-posix/rcS (opens new window) on Posix), which calls all other scripts.
+\end_layout
+
+\begin_layout Part*
+Simulazione
+\end_layout
+
+\begin_layout Standard
+PX4 supports both Software In the Loop (SITL) simulation, where the flight
+ stack runs on computer (either the same computer or another computer on
+ the same network) and Hardware In the Loop (HITL) simulation using a simulation
+ firmware on a real flight controller board.
+\end_layout
+
+\begin_layout Itemize
+Gazebo: A powerful 3D simulation environment that is particularly suitable
+ for testing object-avoidance and computer vision.
+ It can also be used for multi-vehicle simulation and is commonly used with
+ ROS, a collection of tools for automating vehicle control.
+ 
+\end_layout
+
+\begin_layout Itemize
+FlightGear : A simulator that provides physically and visually realistic
+ simulations.
+ In particular it can simulate many weather conditions, including thunderstorms,
+ snow, rain and hail, and can also simulate thermals and different types
+ of atmospheric flows
+\end_layout
+
+\begin_layout Itemize
+JSBSim : A simulator that provides advanced flight dynamics models.
+ This can be used to model realistic flight dynamics based on wind tunnel
+ data.
+\end_layout
+
+\begin_layout Itemize
+jMAVSim: A simple multirotor simulator that allows you to fly copter type
+ vehicles around a simulated world.
+ It is easy to set up and can be used to test that your vehicle can take
+ off, fly, land, and responds appropriately to various fail conditions (e.g.
+ GPS failure).
+\end_layout
+
+\begin_layout Itemize
+AirSim : A cross platform simulator that provides physically and visually
+ realistic simulations.
+ This simulator is resource intensive, and requires a very significantly
+ more powerful computer than the other simulators described here.
+\end_layout
+
+\begin_layout Itemize
+Simulation-In-Hardware (SIH) : An alternative to HITL that offers a hard
+ real-time simulation directly on the hardware autopilot.
+\end_layout
+
+\begin_layout Itemize
+Ignition Gazebo : Ignition Gazebo is derived from the popular robotics simulator
+ Gazebo, featuring more advanced rendering, physics and sensor models.
+\end_layout
+
+\begin_layout Standard
+Simulator MAVLink API
+\end_layout
+
+\begin_layout Standard
+All simulators communicate with PX4 using the Simulator MAVLink API.
+ This API defines a set of MAVLink messages that supply sensor data from
+ the simulated world to PX4 and return motor and actuator values from the
+ flight code that will be applied to the simulated vehicle.
+ The image below shows the message flow.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/px4_simulator_messages(mavlink_api).png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Simulator MAVLink API
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+SITL
+\end_layout
+
+\begin_layout Standard
+The diagram below shows a typical SITL simulation environment for any of
+ the supported simulators.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/px4_sitl_overview(sitl).svg
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+SITL
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The different parts of the system connect via UDP, and can be run on either
+ the same computer or another computer on the same network.
+\end_layout
+
+\begin_layout Subsection
+Lockstep Simulation
+\end_layout
+
+\begin_layout Standard
+PX4 SITL and the simulators (jMAVSim or Gazebo) have been set up to run
+ in lockstep.
+ What this means is that PX4 and the simulator wait on each other for sensor
+ and actuator messages, rather than running at their own speeds.
+\end_layout
+
+\begin_layout Standard
+Note
+\end_layout
+
+\begin_layout Standard
+Lockstep makes it possible to run the simulation faster or slower than realtime,
+ and also to pause it in order to step through code.
+\end_layout
+
+\begin_layout Standard
+The sequence of steps for lockstep are:
+\end_layout
+
+\begin_layout Standard
+The simulation sends a sensor message HIL_SENSOR
+\end_layout
+
+\begin_layout Standard
+(opens new window) including a timestamp time_usec to update the sensor
+ state and time of PX4.
+ PX4 receives this and does one iteration of state estimation, controls,
+ etc.
+ and eventually sends an actuator message HIL_ACTUATOR_CONTROLS
+\end_layout
+
+\begin_layout Standard
+(opens new window).
+ The simulation waits until it receives the actuator/motor message, then
+ simulates the physics and calculates the next sensor message to send to
+ PX4 again.
+\end_layout
+
+\begin_layout Standard
+The system starts with a "freewheeling" period where the simulation sends
+ sensor messages including time and therefore runs PX4 until it has initialized
+ and responds with an actuator message.
+ 
+\end_layout
+
+\begin_layout Subsection
+Startup Scripts
+\end_layout
+
+\begin_layout Standard
+Scripts are used to control which parameter settings to use or which modules
+ to start.
+ They are located in the ROMFS/px4fmu_common/init.d-posix
+\end_layout
+
+\begin_layout Standard
+(opens new window) directory, the rcS file is the main entry point.
+ See System Startup for more information.
+ 
+\end_layout
+
+\begin_layout Subsection
+Camera Simulation
+\end_layout
+
+\begin_layout Standard
+PX4 supports capture of both still images and video from within the Gazebo
+ simulated environment.
+ This can be enabled/set up as described in Gazebo > Video Streaming.
+\end_layout
+
+\begin_layout Standard
+The simulated camera is a gazebo plugin that implements the MAVLink Camera
+ Protocol
+\end_layout
+
+\begin_layout Standard
+PX4 connects/integrates with this camera in exactly the same way as it would
+ with any other MAVLink camera:
+\end_layout
+
+\begin_layout Enumerate
+TRIG_INTERFACE must be set to 3 to configure the camera trigger driver for
+ use with a MAVLink camera.
+ TIP In this mode the driver just sends a CAMERA_TRIGGER message whenever
+ an image capture is requested.
+ For more information see Camera.
+\end_layout
+
+\begin_layout Enumerate
+PX4 must forward all camera commands between the GCS and the (simulator)
+ MAVLink Camera.
+ You can do this by starting MAVLink with the -f flag as shown, specifying
+ the UDP ports for the new connection / mavlink start -u 14558 -o 14530
+ -r 4000 -f -m camera 
+\end_layout
+
+\begin_layout Subsection
+Remote server
+\end_layout
+
+\begin_layout Section
+gazebo/ignition
+\end_layout
+
+\begin_layout Standard
+Gazebo (opens new window) is a powerful 3D simulation environment for autonomous
+ robots that is particularly suitable for testing object-avoidance and computer
+ vision.
+ This page describes its use with SITL and a single vehicle.
+ Gazebo can also be used with HITL and for multi-vehicle simulation.
+\end_layout
+
+\begin_layout Subsection
+Starting Gazebo and PX4 Separately
+\end_layout
+
+\begin_layout Subsection
+Simulated Survey Camera
+\end_layout
+
+\begin_layout Standard
+The Gazebo survey camera simulates a MAVLink camera
+\end_layout
+
+\begin_layout Standard
+(opens new window) that captures geotagged JPEG images and sends camera
+ capture information to a connected ground station.
+ The camera also supports video streaming.
+ It can be used to test camera capture, in particular within survey missions.
+\end_layout
+
+\begin_layout Standard
+The camera emits the CAMERA_IMAGE_CAPTURED (opens new window) message every
+ time an image is captured.
+\end_layout
+
+\begin_layout Subsection
+Video Streaming
+\end_layout
+
+\begin_layout Standard
+PX4 SITL for Gazebo supports UDP video streaming from a Gazebo camera sensor
+ attached to a vehicle model.
+ When streaming is enabled, you can connect to this stream from QGroundControl
+ (on UDP port 5600) and view video of the Gazebo environment from the simulated
+ vehicle - just as you would from a real camera.
+ The video is streamed using a gstreamer pipeline and can be enabled/disabled
+ using a button in the Gazebo UI.
+\end_layout
+
+\begin_layout Subsection
+Verbose Logging
+\end_layout
+
+\begin_layout Standard
+SITL fails silently when there is something wrong with the gazebo model.
+ You can enable more verbose logging using VERBOSE_SIM
+\end_layout
+
+\begin_layout Subsection
+ignition
+\end_layout
+
+\begin_layout Standard
+It is derived from the popular robotics simulator Gazebo, featuring more
+ advanced rendering, physics and sensor models.
+\end_layout
+
+\begin_layout Standard
+attualmente il processo è solo disponibile per 
+\end_layout
+
+\begin_layout Subsection
+Hardware in the Loop Simulation (HITL)
+\end_layout
+
+\begin_layout Standard
+Hardware-in-the-Loop (HITL or HIL) is a simulation mode in which normal
+ PX4 firmware is run on real flight controller hardware.
+ This approach has the benefit of testing most of the actual flight code
+ on the real hardware.
+\end_layout
+
+\begin_layout Standard
+PX4 supports HITL for multicopters (using jMAVSim or Gazebo) and VTOL (using
+ Gazebo)
+\end_layout
+
+\begin_layout Standard
+With Hardware-in-the-Loop (HITL) simulation the normal PX4 firmware is run
+ on real hardware.
+ JMAVSim or Gazebo (running on a development computer) are connected to
+ the flight controller hardware via USB/UART.
+ The simulator acts as gateway to share MAVLink data between PX4 and QGroundCont
+rol.
+\end_layout
+
+\begin_layout Standard
+The diagram below shows the simulation environment:
+\end_layout
+
+\begin_layout Itemize
+A HITL configuration is selected (via QGroundControl) that doesn't start
+ any real sensors.
+ 
+\end_layout
+
+\begin_layout Itemize
+jMAVSim or Gazebo are connected to the flight controller via USB.
+ 
+\end_layout
+
+\begin_layout Itemize
+The simulator is connected to QGroundControl via UDP and bridges its MAVLink
+ messages to PX4.
+ 
+\end_layout
+
+\begin_layout Itemize
+Gazebo and jMAVSim can also connect to an offboard API and bridge MAVLink
+ messages to PX4.
+ 
+\end_layout
+
+\begin_layout Itemize
+(Optional) A serial connection can be used to connect Joystick/Gamepad hardware
+ via QGroundControl.
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/px4_hitl_overview.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+hitl
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+SITL runs on a development computer in a simulated environment, and uses
+ firmware specifically generated for that environment.
+ Other than simulation drivers to provide fake environmental data from the
+ simulator the system behaves normally.
+\end_layout
+
+\begin_layout Standard
+By contrast, HITL runs normal PX4 firmware in "HITL mode", on normal hardware.
+ The simulation data enters the system at a different point than for SITL.
+ Core modules like commander and sensors have HITL modes at startup that
+ bypass some of the normal functionality.
+\end_layout
+
+\begin_layout Standard
+In summary, HITL runs PX4 on the actual hardware using standard firmware,
+ but SITL actually executes more of the standard system code.
+ 
+\end_layout
+
+\begin_layout Section
+Hardware
+\end_layout
+
+\begin_layout Standard
+In questa parte, la documentazione descrive tutto quello che riguarda l'hardware
+ xD.
+\end_layout
+
+\begin_layout Standard
+l'unica cosa che interessa è la creazione di un nuovo airframe, dato che
+ andremo a modificare il mixer in modo da avere un compatibilità del nostro
+ sistema con alcune apparecchiature descritte successivamente
+\end_layout
+
+\begin_layout Subsection
+Adding a New Airframe Configuration
+\end_layout
+
+\begin_layout Standard
+PX4 uses canned airframe configurations as starting point for airframes.
+ The configurations are defined in config files that are stored in the ROMFS/px4
+fmu_common/init.d (opens new window) folder.
+ The config files reference mixer files that describe the physical configuration
+ of the system, and which are stored in the ROMFS/px4fmu_common/mixers
+\end_layout
+
+\begin_layout Standard
+(opens new window) folder.
+\end_layout
+
+\begin_layout Standard
+Adding a configuration is straightforward: create a new config file in the
+ init.d/airframes folder (opens new window) (prepend the filename with an
+ unused autostart ID), add the name of your new airframe config file to
+ the CMakeLists.txt
+\end_layout
+
+\begin_layout Standard
+(opens new window) in the relevant section, then build and upload the software.
+\end_layout
+
+\begin_layout Standard
+Developers who do not want to create their own configuration can instead
+ customize existing configurations using text files on the microSD card,
+ as detailed on the custom system startup page.
+\end_layout
+
+\begin_layout Subsubsection
+Configuration File Overview
+\end_layout
+
+\begin_layout Standard
+he configuration in the config and mixer files consists of several main
+ blocks:
+\end_layout
+
+\begin_layout Standard
+Airframe documentation (used in the Airframes Reference and QGroundControl).
+ Vehicle-specific parameter settings, including tuning gains.
+ The controllers and apps it should start, e.g.
+ multicopter or fixed wing controllers, land detectors etc.
+ The physical configuration of the system (e.g.
+ a plane, wing or multicopter).
+ This is called a mixer.
+\end_layout
+
+\begin_layout Standard
+These aspects are mostly independent, which means that many configurations
+ share the same physical layout of the airframe, start the same applications
+ and differ most in their tuning gains.
+\end_layout
+
+\begin_layout Standard
+The first section is the airframe documentation.
+ This is used in the Airframes Reference and QGroundControl.
+\end_layout
+
+\begin_layout Standard
+The next section specifies vehicle-specific parameters, including tuning
+ gains:
+\end_layout
+
+\begin_layout Standard
+Set frame type (MAV_TYPE (opens new window)):
+\end_layout
+
+\begin_layout Standard
+Set the mixer to use:
+\end_layout
+
+\begin_layout Standard
+Configure PWM outputs (specify the outputs to drive/activate, and the levels).
+\end_layout
+
+\begin_layout Subsubsection
+Mixer File
+\end_layout
+
+\begin_layout Standard
+gives important information about the type of airframe (wingwing), the type
+ of output (.main or .aux) and lastly that it is a mixer file (.mix).
+\end_layout
+
+\begin_layout Standard
+The mixer file contains several blocks of code, each of which refers to
+ one actuator or ESC.
+ So if you have e.g.
+ two servos and one ESC, the mixer file will contain three blocks of code.
+\end_layout
+
+\begin_layout Standard
+A mixer is encoded in normalized units from -10000 to 10000, corresponding
+ to -1..+1.
+\end_layout
+
+\begin_layout Standard
+Where each number from left to right means:
+\end_layout
+
+\begin_layout Itemize
+M: Indicates two scalers for two control inputs.
+ It indicates the number of control inputs the mixer will receive.
+ 
+\end_layout
+
+\begin_layout Itemize
+O: Indicates the output scaling (*1 in negative, *1 in positive), offset
+ (zero here), and output range (-1..+1 here).
+ If you want to invert your PWM signal, the signs of the output scalings
+ have to be changed: This line can (and should) be omitted completely if
+ it specifies the default scaling:
+\end_layout
+
+\begin_layout Itemize
+S: Indicates the first input scaler: It takes input from control group #0
+ (Flight Control) and the first input (roll).
+ It scales the roll control input * 0.6 and reverts the sign (-0.6 becomes
+ -6000 in scaled units).
+ It applies no offset (0) and outputs to the full range (-1..+1)
+\end_layout
+
+\begin_layout Standard
+https://docs.px4.io/master/en/hardware/
+\end_layout
+
+\begin_layout Subsubsection
+Adding a New Airframe Group
+\end_layout
+
+\begin_layout Standard
+definisce come riportare il nuovo airframe in modo migliorato dentro qgroundcont
+rol.
+\end_layout
+
+\begin_layout Standard
+aumenta l'estetica non è utile per la simulazione
+\end_layout
+
+\begin_layout Subsection
+Gimbal Control Setup
+\end_layout
+
+\begin_layout Standard
+you need to configure how you want to control it and how PX4 can command
+ it.
+ PX4 contains a generic mount/gimbal control driver with different input
+ and output methods.
+\end_layout
+
+\begin_layout Itemize
+The input defines how you control the gimbal: via RC or via MAVLink commands
+ (for example in missions or surveys).
+ 
+\end_layout
+
+\begin_layout Itemize
+The output defines how the gimbal is connected: either via MAVLink commands
+ or using the Flight Controller AUX PWM port.
+ Any input method can be selected to drive any output, and both input and
+ output have to be configured via parameters
+\end_layout
+
+\begin_layout Subsubsection
+Parameters
+\end_layout
+
+\begin_layout Standard
+The Mount parameters are used to setup the mount driver.
+\end_layout
+
+\begin_layout Standard
+The most important ones are the input (MNT_MODE_IN) and the output (MNT_MODE_OUT
+) mode.
+ If the input mode is set to AUTO, the mode will automatically be switched
+ based on the latest input
+\end_layout
+
+\begin_layout Subsubsection
+MAVLink Gimbal 
+\end_layout
+
+\begin_layout Subsubsection
+Gimbal on Flight Controller 
+\end_layout
+
+\begin_layout Section
+Middleware
+\end_layout
+
+\begin_layout Standard
+including PX4 internal communication mechanisms (uORB), and between PX4
+ and offboard systems like companion computers and GCS (e.g.
+ MAVLink, RTPS).
+\end_layout
+
+\begin_layout Itemize
+The uORB is an asynchronous publish() / subscribe() messaging API used for
+ inter-thread/inter-process communication.
+\end_layout
+
+\begin_layout Itemize
+MAVLink (opens new window) is a very lightweight messaging protocol that
+ has been designed for the drone ecosystem.
+ PX4 uses MAVLink to communicate with QGroundControl (and other ground stations)
+, and as the integration mechanism for connecting to drone components outside
+ of the flight controller: companion computers, MAVLink enabled cameras
+ etc.
+ The protocol defines a number of standard messages (opens new window) and
+ microservices (opens new window) for exchanging data
+\end_layout
+
+\begin_layout Itemize
+The PX4-Fast RTPS(DDS) Bridge, which is also referred to as as the microRTPS
+ Bridge, adds a Real Time Publish Subscribe (RTPS) interface to the PX4
+ Autopilot, enabling the exchange of uORB messages between the various PX4
+ Autopilot internal components and (offboard) Fast DDS applications in realtime.
+ This allows us to better integrate with applications running and linked
+ in DDS domains (including ROS nodes), making it easy to share sensor data,
+ commands, and other vehicle information.
+\end_layout
+
+\begin_layout Standard
+RTPS should be used when you need to reliably share time-critical/real-time
+ information between the flight controller and offboard components.
+\end_layout
+
+\begin_layout Standard
+microRTPS Bridge
+\end_layout
+
+\begin_layout Standard
+The microRTPS bridge exchanges messages between PX4 and DDS-participant
+ applications, seamlessly converting between the uORB and RTPS/DDS messages
+ used by each system.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename images/bridge_rtps.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+bridge RTPS
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The microRTPS Client
+\end_layout
+
+\begin_layout Standard
+The Client is the PX4 Autopilot middleware daemon process that runs on the
+ flight controller.
+ This client subscribes to uORB topics published by other PX4 Autopilot
+ components and sends any updates to the Agent (via a UART or UDP port),
+ and also receives messages from the Agent and publishes them as uORB messages
+ to the PX4 Autopilot.
+ # The microRTPS Agent
+\end_layout
+
+\begin_layout Standard
+The Agent runs as a daemon process on an offboard computer (outside the
+ flight controller).
+ This agent watches for uORB update messages from the Client and (re)publishes
+ them over RTPS, and also subscribes to "uORB" RTPS/DDS messages from other
+ DDS-participant applications and forwards them to the Client.
+ # microRTPS Agent/Client Communication
+\end_layout
+
+\begin_layout Standard
+The Agent and Client are connected via a serial link (UART) or UDP network,
+ and the uORB information is CDR serialized
+\end_layout
+
+\begin_layout Standard
+(opens new window) before being sent (CDR serialization provides a common
+ format for exchanging serial data between different platforms).
+\end_layout
+
+\begin_layout Standard
+The Agent and any Fast DDS applications are connected via UDP and may be
+ on the same or another device.
+ In a typical configuration, they will be on the same system (e.g., a development
+ computer, Linux companion computer, or compute board), connected to the
+ Client.
+ This can be through a Wifi link or USB.
+\end_layout
+
+\begin_layout Standard
+Informazioni riguardo px4 sitl 
+\end_layout
+
+\begin_layout Standard
+test ros https://docs.px4.io/master/en/test_and_ci/integration_testing.html
+\end_layout
+
+\begin_layout Part*
+Robotics
+\end_layout
+
+\begin_layout Standard
+Robotics APIs allow you to control PX4 from outside the flight stack computing
+ environment (flight controller) using a companion computer or other computing
+ environment.
+ The APIs communicate with PX4 using MAVLink or RTPS.
+\end_layout
+
+\begin_layout Standard
+PX4 can be used with robotics APIs including MAVSDK (opens new window) and
+ ROS.
+ DroneKit can also be used, but is not optimised for use with PX4.
+\end_layout
+
+\begin_layout Section
+Offboard Control
+\end_layout
+
+\begin_layout Standard
+The idea behind off-board control is to be able to control the PX4 flight
+ stack using software running outside of the autopilot.
+ This is done through the MAVLink protocol, specifically the SET_POSITION_TARGET
+_LOCAL_NED (opens new window) and the SET_ATTITUDE_TARGET (opens new window)
+ messages.
+\end_layout
+
+\begin_layout Standard
+ci sono tre possibili connessioni: Serial radios, On-board processor e On-board
+ processor and wifi link to ROS (Recommended).
+\end_layout
+
+\begin_layout Standard
+https://docs.px4.io/master/en/ros/offboard_control.html
+\end_layout
+
+\begin_layout Section
+Onboard computer
+\end_layout
+
+\begin_layout Standard
+connessione con protocollo veloce e sul drone tra px4 e 
+\end_layout
+
+\begin_layout Subsection
+ROS 
+\end_layout
+
+\begin_layout Standard
+something info about ros 
+\end_layout
+
+\begin_layout Subsubsection
+px4-ROS
+\end_layout
+
+\begin_layout Standard
+Questa è una descrizione come ottenere 
+\end_layout
+
+\begin_layout Standard
+px4-ros2 bridge 
+\end_layout
+
+\begin_layout Section
+Dronekit
+\end_layout
+
+\begin_layout Standard
+python api per communicare con px4 (in development) https://docs.px4.io/master/en/
+ros/offboard_control.html
+\end_layout
+
+\begin_layout Standard
+Drone kit: http://dronekit.io/
+\end_layout
+
+\begin_layout Part*
+Modelli
+\end_layout
+
+\begin_layout Standard
+Ora, descritto il funzionamento del sistema px4 e di tutte le sue componenti
+ che potrebbero essere utilizzate per la realizzazione della simulazione,
+ andiamo a costruire il modello che meglio può rappresentare il drone e
+ del suo sistema di aggancio.
+\end_layout
+
+\begin_layout Standard
+Per la realizzazione del drone e per il fatto che utilizzeremo gazebo come
+ simulatore, la cartella nella quale lavoreremo maggiormente sarà Tools/sitl_gaz
+ebo, la quale contiene la definizione dei modelli e dei mondi che gazebo
+ utilizza.
+ Però file nuovi, che non siano quelli già presenti nel sistema di directories,
+ non verranno letti.
+ Per sistemare la mancata compilazione del file, come per altre cose che
+ andremo a modificare per la simulazione, bisogna aggiungere il nome del
+ file dentro un Cmakelist.txt al seguente percorso: $path_px4/______________-.
+\end_layout
+
+\begin_layout Standard
+Fatto questo si potrà compilare e lanciare la simulazione con il drone da
+ noi costruito semplicemente con il sefuente comando: make px4_sitl gazebo_Dronu
+s_drone
+\end_layout
+
+\begin_layout Standard
+Inoltre per avere definiti i parametri alla partenza della simulazione dobbiamo
+ aggiungere un file nel seguente path [$PX4-Autopilot_directory/ROMFS/px4fmu_com
+mon/init.d-posix/airframe] avente come nome: un numero (non presente nella
+ directory) e con il nome del drone.
+ esempio: 7000Dronus_drone e di nuove per essere compilato correttamente
+ bisogna inserire il nome del file all'interno del CMakeFile.txt presente
+ nella directory superiore.
+\end_layout
+
+\begin_layout Standard
+Oltre al modello del drone che simuleremo andiamo anche a similare il sistema
+ di aggancio, queste modifiche non saranno relativa alla simulazione del
+ drone e perciò andremo a creare un altro file.
+ il primo file che descrive il modello costruttivo sarà contenuto dentro
+ la directory models mentre il metodo che andremo ad utilizzare per aggiungerlo
+ alla simulazione sarà con l'aggiunta di un file che descrive il mondo dove
+ il drone andrà ad essere simulato, un file di tipo world.
+ anche in questo caso il file deve essere aggiunto al file cmake per ottenere
+ la compilazione di tutto il sistema e potrà essere chiamato per la simulazione
+ con la seguente riga:
+\end_layout
+
+\begin_layout Standard
+make px4_sitl gazebo_Dronus_drone__Dronus_site dove dopo il modello del
+ drone sono presenti due underscore ed il nome del mondo voluto per la simulazio
+ne.
+\end_layout
+
+\begin_layout Standard
+Adesso in dettaglio saranno descritti i vari modelli costruiti.
+\end_layout
+
+\begin_layout Section
+drone Modellino
+\end_layout
+
+\begin_layout Standard
+Il modo migliore per la realizzazione del modello in formato sdf del drone
+ è passare per il modello URDF generato dal plugin di solidworks, utilizzabile
+ da gazebo (anche se conviene convertirlo in formato sdf per la corretta
+ nomenclatura delle parti del drone o del sistema Nest che andremo anchesso
+ a modelizzare) a partire del file Solidworks del drone.
+ Il sistema del drone sarà meglio descritto come un sistema con un corpo
+ unico centrale ed eliche e motori, il motivo sarà discusso dopo.
+\end_layout
+
+\begin_layout Standard
+Il modello sdf è principalmente così descritto, si veda http://sdformat.org/spec
+ per altre info:
+\end_layout
+
+\begin_layout Itemize
+link: composti da una descrizione inerziale del oggetto, una descrizione
+ visiva (mesh) e una descrizione di tipo contatto che può essere la stessa
+ mesh usata nella parte visiva.+
+\end_layout
+
+\begin_layout Itemize
+joint: descrivono le connessioni tra i vari link e posso essere di tipo.
+ fixed, continuos, ball, revolute, gearbox,revolute2, prismatic, screw,
+ universal.
+\end_layout
+
+\begin_layout Standard
+avendo il modello bisogna ora inserire i plugin (tipo exe file) che descrivono
+ il comportamento del drone e dei suoi sensori.
+\end_layout
+
+\begin_layout Subsection
+Plugins generali modellino
+\end_layout
+
+\begin_layout Standard
+I plugins sono degli script C/C++ usati per descrivere il comportamento
+ di un certo oggetto nella simulazione.
+\end_layout
+
+\begin_layout Standard
+I tipi principali sono di tipo world, che va a modifcare le cose a livello
+ world ed deve essere caricato dentro un world file) 
+\end_layout
+
+\begin_layout Subsubsection
+libgazebo_multirotor_base_plugin.so
+\end_layout
+
+\begin_layout Standard
+Descrive:
+\end_layout
+
+\begin_layout Subsubsection
+libgazebo_motor_model.so
+\end_layout
+
+\begin_layout Standard
+descrive il modello del motore e come funziona nella simulazione:
+\end_layout
+
+\begin_layout Standard
+esso ha bisogno dei seguenti parametri: 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+jointName 
+\series default
+: nome del joint
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+linkName
+\series default
+ :nome link del motore
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+turningDirection 
+\series default
+: tipo di rotazione oraria cw o antioraria ccw
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+timeConstantUp
+\series default
+ : FirstOrderFilter
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+timeConstantDown
+\series default
+ : FirstOrderFilter
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+maxRotVelocity
+\series default
+ : KV * maxV * max efficenzy of motor * 2 * pi / 60
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+motorConstant
+\series default
+ : CT0 are the thrust coefficent at J=0
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+momentConstant
+\series default
+ : CQ0
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+commandSubTopic
+\series default
+ : topic comando 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+motorNumber 
+\series default
+: numero motore
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+rotorDragCoefficient
+\series default
+: it can be defined from the H-force is an attribute of an airfoil section
+ (or any particular shape) at a particular angle of attack (AoA) and Re.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+rollingMomentCoefficient
+\series default
+ : qualcosa
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+motorSpeedPubTopic 
+\series default
+: topic speed
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+rotorVelocitySlowdownSim 
+\series default
+: usato nella GUI della simulazione per ridurre la velocità e nn andare
+ in errore
+\end_layout
+
+\begin_layout Subsubsection
+libgazebo_groundtruth_plugin.so
+\end_layout
+
+\begin_layout Standard
+Descrive:
+\end_layout
+
+\begin_layout Subsubsection
+libgazebo_mavlink_interface.so
+\end_layout
+
+\begin_layout Standard
+Descrive: le informazioni mandate attraverso il protocollo mavlink
+\end_layout
+
+\begin_layout Subsubsection
+libgazebo_gst_camera_plugin.so
+\end_layout
+
+\begin_layout Standard
+udp port camera gimbal
+\end_layout
+
+\begin_layout Subsubsection
+libgazebo_camera_manager_plugin.so
+\end_layout
+
+\begin_layout Standard
+definisce comportamento camera gimbal
+\end_layout
+
+\begin_layout Subsubsection
+libgazebo_gimbal_controller_plugin.so
+\end_layout
+
+\begin_layout Standard
+controllo della camera gimbal
+\end_layout
+
+\begin_layout Subsection
+plugins sensori
+\end_layout
+
+\begin_layout Standard
+Per i sensori i plugin sono definiti come misure dello stato del link nel
+ momento del update e poi aggiunta di rumore.
+\end_layout
+
+\begin_layout Standard
+Attualmente il tipo di rumore usato è derivato da misure statiche e applicazione
+ dello studio sulla varianza di Allan:
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+noidse
+\series default
+ 
+\series bold
+density
+\series default
+ (
+\series bold
+white
+\series default
+ 
+\series bold
+noise
+\series default
+) 
+\begin_inset Formula $\frac{unitaMisura}{\sqrt{Hz}}$
+\end_inset
+
+ On the Allan deviation log–log plot, this noise type is characterized by
+ a region of -1/2 slope, whereas in PSD log–log plot with a region of 0
+ slope IEEE
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+random
+\series default
+ 
+\series bold
+walk
+\series default
+ (
+\series bold
+brown
+\series default
+ 
+\series bold
+noise
+\series default
+) 
+\begin_inset Formula $\frac{\frac{unitaMisura}{s}}{\sqrt{Hz}}$
+\end_inset
+
+ The random walk error is defined as a process consisting of a series of
+ steps, in which the direction and size of each stepis randomly determined.
+ This type of noise is associated with an Allan deviation log–log plot with
+ a region of +1/2 slope; and with a region of -2 slope for PSD log–log plot
+ IEEE.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+bias
+\series default
+ 
+\series bold
+instability
+\series default
+ (
+\series bold
+pink
+\series default
+ 
+\series bold
+noise
+\series default
+) 
+\begin_inset Formula $\frac{unitaMisura}{\sqrt{Hz}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+update
+\series default
+ 
+\series bold
+rate
+\series default
+: frequanza output segnale.
+\end_layout
+
+\begin_layout Subsubsection
+libgazebo_magnetometer_plugin.so
+\end_layout
+
+\begin_layout Standard
+Descrive: il funzionamento del magnetometro
+\end_layout
+
+\begin_layout Subsubsection
+libgazebo_barometer_plugin.so
+\end_layout
+
+\begin_layout Standard
+Descrive: il funzionamento del barometro
+\end_layout
+
+\begin_layout Subsubsection
+libgazebo_imu_plugin.so
+\end_layout
+
+\begin_layout Standard
+Descrive: le informazioni mandate attraverso il protocollo mavlink
+\end_layout
+
+\begin_layout Subsubsection
+imu
+\end_layout
+
+\begin_layout Standard
+plugin più generale di gazebo, usato solo per la camera gimbal
+\end_layout
+
+\begin_layout Subsubsection
+camera
+\end_layout
+
+\begin_layout Standard
+plugin più generale di gazebo, definizione della caratteristica della camera
+\end_layout
+
+\begin_layout Subsubsection
+gimbalv2
+\end_layout
+
+\begin_layout Standard
+SOlamente a memoria di ciò che è stato fatto:
+\end_layout
+
+\begin_layout Standard
+adattamento del plugin di controllo del gimbal in modo di avere lo stesso
+ controllo per un 3 assi gimbal (funziona solo per quel tipo) ad un qualsiasi
+ gimbal.
+\end_layout
+
+\begin_layout Subsection
+Qground control
+\end_layout
+
+\begin_layout Standard
+il passaggio delle porte all'host ci permette di modificare i parametri
+ PID e visualizzare cosa la camera ci invia attraverso la ground station
+ Qground control (inserire descrizione)
+\end_layout
+
+\begin_layout Section
+Nest
+\end_layout
+
+\begin_layout Standard
+Il nest viene descritto come una cupola atta a ricevere il drone ed indirizzarlo
+ verso il sistema di aggancio.
+ per la simulazione attualmente è stato deciso di usarlo come semplice oggetto
+ che permettera di simulare le collisione del drone con esso.
+ permettendoci di analizzare cosa gli strumenti ci forniranno e come si
+ comporterà il sitema px4 a tali urti.
+\end_layout
+
+\begin_layout Standard
+Esso per essere utilizzato per test dotato di sensori
+\end_layout
+
+\begin_layout Subsection
+Sensori
+\end_layout
+
+\begin_layout Standard
+I sensori che andiamo ad utilizzare sono i seguenti
+\end_layout
+
+\begin_layout Subsubsection
+camera
+\end_layout
+
+\begin_layout Standard
+config camera e setup
+\end_layout
+
+\begin_layout Subsubsection
+radar
+\end_layout
+
+\begin_layout Standard
+sono stati trovati solo due tipi di radar per gazebo.
+ ambedue non forniscono un sistema che nice.
+\end_layout
+
+\begin_layout Standard
+tutti i controllo di sto tipo son fatti con radar plugin sensor di gazebo.
+ vengono gestiti con altri plugin di tipo sensor che vengono posti immediatament
+e dopo o dentro il ray plugin.
+\end_layout
+
+\begin_layout Standard
+quello che vogliamo è puntare su un point cloud oppure usare i filtri dellaltro.
+\end_layout
+
+\begin_layout Section
+World
+\end_layout
+
+\begin_layout Standard
+file descrittivo dellambiente nel quale il drone si trova.
+ qui inseriremo le cordinate di riferimento del drone.
+ ed andremo a describere la realizzazione del plugin che descrive il comportamen
+to del drone con il sistema di aggancio del nest.
+\end_layout
+
+\begin_layout Subsection
+Plugin
+\end_layout
+
+\begin_layout Standard
+andremo ora a descrivere cosa ci ha portati alla realizzazione del plugin
+\end_layout
+
+\begin_layout Standard
+Il drone si approccia ad un area, quando questo viene rilevato si chiudono
+ due ganasce che, se il drone è mal orientato, lo spostano nella posizione
+ di ricarica.
+\end_layout
+
+\begin_layout Standard
+sono stati valutati diversi approcci:
+\end_layout
+
+\begin_layout Itemize
+joint: connessione di tipo attach che crea un joint tra il drone e il nest
+ di tipo ball (fisso nello spazio ma libero di ruotare nelle tre cordinate).
+ Il sistema si comporta malamente provocando diverse oscillazione che degenerano
+ i sensori e il px4
+\end_layout
+
+\begin_layout Itemize
+teleport: teletrasportare il drone alla posizione di ricarica, tale soluzione
+ non crea problemi ai sensori però richiede che sia annulata la velocita
+ del link in modo che allo sgancio la velocità accumulata non si scarichi.
+\end_layout
+
+\begin_layout Subsubsection
+Teleport
+\end_layout
+
+\begin_layout Standard
+Visto che la soluzione migliore è il teleport abbiamo sviluppato del codice
+ che meglio aanlizzi il comportamento del drone attaccato.
+\end_layout
+
+\begin_layout Standard
+Il drone è libero di ruotare rispetto allo yaw ma è limitato rispetto al
+ roll and pitch.
+ tale limiti vengono imposti teletrasportando il drone rispetto al limite
+ massimo roll and pitch.
+\end_layout
+
+\end_body
+\end_document
